@@ -23,22 +23,22 @@ static inline void trigger_init(void) {
 static inline void trigger_high(void) { gpio_set_level(TRIGGER_GPIO, 1); }
 static inline void trigger_low(void)  { gpio_set_level(TRIGGER_GPIO, 0); }
 
-/// Genera semilla de 32B a partir del TRNG + postprocesamiento SHAKE256
+/// generate seed 32b
 void gen_seed(uint8_t *seed, size_t len) {
-    // Paso 1: recolectar 256 bytes de TRNG crudo
+    // trng 256 bytes
     uint8_t entropy[256];
     for (int i = 0; i < sizeof(entropy); i += 4) {
         uint32_t r = esp_random();
         memcpy(entropy + i, &r, 4);
     }
 
-    // Paso 2: postprocesamiento NIST (SHAKE256)
+    // shake256
     keccak_state st;
     shake256_init(&st);
     shake256_absorb(&st, entropy, sizeof(entropy));
     shake256_finalize(&st);
 
-    // Paso 3: exprimir exactamente 32 bytes de semilla uniforme
+    // squeeze 32 bytes
     shake256_squeeze(seed, len, &st);
 }
 
